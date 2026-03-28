@@ -10,6 +10,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] Image[] healthIcons; // assign in inspector or scene builder fills these
     [SerializeField] TextMeshProUGUI waveText;
     [SerializeField] TextMeshProUGUI killText;
+    [SerializeField] TextMeshProUGUI ammoText;
     [SerializeField] GameObject gameOverPanel;
     [SerializeField] Image crosshair;
 
@@ -48,6 +49,12 @@ public class UIManager : MonoBehaviour
     {
         if (killText != null)
             killText.text = "Kills: " + kills;
+    }
+
+    public void UpdateAmmo(int ammo)
+    {
+        if (ammoText != null)
+            ammoText.text = ammo.ToString();
     }
 
     public void ShowGameOver()
