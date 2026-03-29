@@ -7,7 +7,7 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance;
 
     [Header("HUD References")]
-    [SerializeField] Image[] healthIcons; // assign in inspector or scene builder fills these
+    [SerializeField] Image[] healthIcons;
     [SerializeField] TextMeshProUGUI waveText;
     [SerializeField] TextMeshProUGUI killText;
     [SerializeField] TextMeshProUGUI ammoText;

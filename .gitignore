@@ -26,3 +26,8 @@ MemoryCaptures/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# =========================
+# Large files (over 100MB)
+# =========================
+*.exr

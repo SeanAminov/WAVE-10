@@ -1822,8 +1822,10 @@ MonoBehaviour:
   moveSpeed: 3
   attackDamage: 1
   attackCooldown: 1
+  attackAnimLockTime: 1
   attackRange: 1.5
   animator: {fileID: 0}
+  deathDestroyDelay: 2
 --- !u!135 &5818015768898028514
 SphereCollider:
   m_ObjectHideFlags: 0

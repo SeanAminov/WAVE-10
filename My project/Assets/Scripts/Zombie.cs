@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using System.Collections;
 
 public class Zombie : MonoBehaviour
@@ -9,76 +10,108 @@ public class Zombie : MonoBehaviour
     [SerializeField] int attackDamage = 1;
     [SerializeField] float attackCooldown = 1.5f;
     [SerializeField] float attackAnimLockTime = 1.0f;
-    [SerializeField] float attackRange = 1.6f;
+    [SerializeField] float attackRange = 2.0f;
 
     [Header("Animation")]
     [SerializeField] Animator animator;
-    [SerializeField] float deathDestroyDelay = 2f;
+    [SerializeField] float deathDestroyDelay = 3f;
+
+    [Header("Audio")]
+    [SerializeField] AudioClip[] groanSounds;
+    [SerializeField] AudioClip[] attackSounds;
+    [SerializeField] AudioClip[] hurtSounds;
+    [SerializeField] AudioClip deathSound;
+    [SerializeField] AudioClip biteSound;
+
+    [Header("References")]
+    [SerializeField] NavMeshAgent agent;
+    [SerializeField] AudioSource audioSource;
 
     int currentHealth;
     Transform player;
     float lastAttackTime = -10f;
 
     bool isDead = false;
-    bool playerContact = false;
     bool isAttacking = false;
+    float nextGroanTime;
 
     void Start()
     {
         currentHealth = maxHealth;
 
-        // find animator (on child model)
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>();
+        if (agent != null)
+        {
+            agent.speed = moveSpeed;
+            agent.stoppingDistance = attackRange * 0.7f;
+            agent.angularSpeed = 360f;
+            agent.acceleration = 8f;
+        }
 
-        // find the player
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
             player = playerObj.transform;
+
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1f;
+        audioSource.minDistance = 2f;
+        audioSource.maxDistance = 30f;
+        audioSource.rolloffMode = AudioRolloffMode.Linear;
+
+        nextGroanTime = Time.time + Random.Range(2f, 8f);
     }
 
     void Update()
     {
         if (isDead || player == null) return;
 
-        // distance to player
-        float dist = Vector3.Distance(transform.position, player.position);
-
-        // failsafe: if player is clearly out of range, stop attacking
-        if (playerContact && dist > attackRange)
+        // random groaning
+        if (groanSounds != null && groanSounds.Length > 0 && Time.time >= nextGroanTime)
         {
-            playerContact = false;
-            isAttacking = false;
+            PlayRandomClip(groanSounds, 0.2f);
+            nextGroanTime = Time.time + Random.Range(5f, 15f);
         }
 
-        // attack behavior
-        if (playerContact)
+        float dist = Vector3.Distance(transform.position, player.position);
+
+        if (dist <= attackRange)
         {
+            StopMoving();
+
             if (animator != null)
                 animator.SetFloat("speedf", 0f);
 
-            // attack only if cooldown finished and not mid-animation
+            // face the player
+            Vector3 lookDir = (player.position - transform.position);
+            lookDir.y = 0;
+            if (lookDir.sqrMagnitude > 0.001f)
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), Time.deltaTime * 10f);
+
             if (!isAttacking && Time.time - lastAttackTime >= attackCooldown)
-            {
                 Attack();
-            }
-
-            return;
         }
+        else
+        {
+            ChasePlayer();
 
-        // move toward the player
-        Vector3 direction = (player.position - transform.position).normalized;
-        direction.y = 0; // stay on the ground
+            float currentSpeed = agent != null ? agent.velocity.magnitude : 0f;
+            if (animator != null)
+                animator.SetFloat("speedf", currentSpeed);
+        }
+    }
 
-        transform.position += direction * moveSpeed * Time.deltaTime;
+    void ChasePlayer()
+    {
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.isStopped = false;
+            agent.SetDestination(player.position);
+        }
+    }
 
-        // face the player
-        if (direction != Vector3.zero)
-            transform.rotation = Quaternion.LookRotation(direction);
-
-        // update movement animation
-        if (animator != null)
-            animator.SetFloat("speedf", moveSpeed);
+    void StopMoving()
+    {
+        if (agent != null && agent.isOnNavMesh)
+            agent.isStopped = true;
     }
 
     void Attack()
@@ -86,29 +119,25 @@ public class Zombie : MonoBehaviour
         if (isDead || isAttacking || player == null)
             return;
 
-        // double-check range before attacking
         float dist = Vector3.Distance(transform.position, player.position);
-        if (!playerContact || dist > attackRange)
-        {
-            playerContact = false;
+        if (dist > attackRange)
             return;
-        }
 
         isAttacking = true;
         lastAttackTime = Time.time;
 
-        // trigger attack animation
         if (animator != null)
             animator.SetTrigger("attackTrigger");
 
-        // deal damage
+        if (attackSounds != null && attackSounds.Length > 0)
+            PlayRandomClip(attackSounds, 0.35f);
+        if (biteSound != null)
+            audioSource.PlayOneShot(biteSound, 0.28f);
+
         PlayerHealth hp = player.GetComponent<PlayerHealth>();
         if (hp != null)
-        {
             hp.TakeDamage(attackDamage);
-        }
 
-        // unlock after animation delay
         StartCoroutine(EndAttackLock());
     }
 
@@ -124,9 +153,36 @@ public class Zombie : MonoBehaviour
 
         currentHealth -= amount;
 
+        if (hurtSounds != null && hurtSounds.Length > 0)
+            PlayRandomClip(hurtSounds, 0.28f);
+
+        StartCoroutine(HitFlash());
+
         if (currentHealth <= 0)
-        {
             Die();
+    }
+
+    IEnumerator HitFlash()
+    {
+        var renderers = GetComponentsInChildren<Renderer>();
+        foreach (var r in renderers)
+        {
+            foreach (var mat in r.materials)
+            {
+                if (mat.HasProperty("_Color"))
+                    mat.color = Color.red;
+            }
+        }
+
+        yield return new WaitForSeconds(0.1f);
+
+        foreach (var r in renderers)
+        {
+            foreach (var mat in r.materials)
+            {
+                if (mat.HasProperty("_Color"))
+                    mat.color = Color.white;
+            }
         }
     }
 
@@ -135,10 +191,17 @@ public class Zombie : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
-        playerContact = false;
         isAttacking = false;
 
-        // trigger random death animation
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.isStopped = true;
+            agent.enabled = false;
+        }
+
+        if (deathSound != null)
+            audioSource.PlayOneShot(deathSound, 0.4f);
+
         if (animator != null)
         {
             animator.SetFloat("speedf", 0f);
@@ -146,17 +209,10 @@ public class Zombie : MonoBehaviour
             animator.SetInteger("deathType", Random.Range(0, 2));
         }
 
-        // disable colliders so zombie stops interacting
         Collider[] colliders = GetComponentsInChildren<Collider>();
         foreach (Collider col in colliders)
             col.enabled = false;
 
-        // stop movement
-        Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb != null)
-            rb.velocity = Vector3.zero;
-
-        // tell the wave manager we died
         WaveManager wm = FindObjectOfType<WaveManager>();
         if (wm != null)
             wm.ZombieKilled();
@@ -173,32 +229,19 @@ public class Zombie : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // let the wave manager set our stats when spawning
     public void SetStats(int health, float speed)
     {
         maxHealth = health;
         currentHealth = health;
         moveSpeed = speed;
+
+        if (agent != null && agent.isOnNavMesh)
+            agent.speed = speed;
     }
 
-    void OnTriggerEnter(Collider other)
+    void PlayRandomClip(AudioClip[] clips, float volume)
     {
-        if (isDead) return;
-
-        if (other.CompareTag("Player"))
-        {
-            playerContact = true;
-        }
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (isDead) return;
-
-        if (other.CompareTag("Player"))
-        {
-            playerContact = false;
-            isAttacking = false;
-        }
+        if (clips == null || clips.Length == 0) return;
+        audioSource.PlayOneShot(clips[Random.Range(0, clips.Length)], volume);
     }
 }

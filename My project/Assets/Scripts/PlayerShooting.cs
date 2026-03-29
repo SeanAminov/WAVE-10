@@ -4,7 +4,7 @@ using System.Collections;
 public class PlayerShooting : MonoBehaviour
 {
     [Header("Gun Settings")]
-    [SerializeField] float fireRate = 0.15f;
+    [SerializeField] float fireRate = 0.1f;
     [SerializeField] float range = 100f;
     [SerializeField] int damage = 1;
 
@@ -12,24 +12,40 @@ public class PlayerShooting : MonoBehaviour
     [SerializeField] int magazineSize = 30;
     [SerializeField] float reloadTime = 1.5f;
 
-    [Header("Animation")]
+    [Header("VFX Prefabs")]
+    [SerializeField] GameObject muzzleFlashPrefab;
+    [SerializeField] GameObject bulletImpactConcretePrefab;
+    [SerializeField] GameObject bulletImpactFleshPrefab;
+
+    [Header("Audio")]
+    [SerializeField] AudioClip shootSound;
+    [SerializeField] AudioClip reloadSound;
+    [SerializeField] AudioClip emptyClickSound;
+
+    [Header("References")]
+    [SerializeField] Camera cam;
+    [SerializeField] AudioSource audioSource;
     [SerializeField] Animator gunAnimator;
 
-    Camera cam;
     float nextTimeToFire = 0f;
-
     int currentAmmo;
     bool isReloading = false;
+    Light muzzleLight;
 
     void Start()
     {
-        cam = GetComponentInChildren<Camera>();
         currentAmmo = magazineSize;
 
-        if (gunAnimator == null)
-            gunAnimator = GetComponentInChildren<Animator>();
+        // muzzle flash light
+        var lightObj = new GameObject("MuzzleLight");
+        lightObj.transform.SetParent(cam.transform, false);
+        lightObj.transform.localPosition = new Vector3(0.4f, -0.15f, 0.8f);
+        muzzleLight = lightObj.AddComponent<Light>();
+        muzzleLight.type = LightType.Point;
+        muzzleLight.color = new Color(1f, 0.8f, 0.4f);
+        muzzleLight.intensity = 0f;
+        muzzleLight.range = 10f;
 
-        // update ammo UI on start
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateAmmo(currentAmmo);
     }
@@ -39,30 +55,34 @@ public class PlayerShooting : MonoBehaviour
         if (GameManager.Instance != null && GameManager.Instance.isGameOver)
             return;
 
-        // don't allow input while reloading
         if (isReloading)
             return;
 
-        // manual reload
         if (Input.GetKeyDown(KeyCode.R) && currentAmmo < magazineSize)
         {
             StartCoroutine(Reload());
             return;
         }
 
-        // auto reload when empty
         if (currentAmmo <= 0)
         {
+            if (Input.GetButtonDown("Fire1") && emptyClickSound != null)
+                audioSource.PlayOneShot(emptyClickSound, 0.35f);
+
             StartCoroutine(Reload());
             return;
         }
 
-        // fire input check with fire rate
-        if (Input.GetButtonDown("Fire1") && Time.time >= nextTimeToFire)
+        // auto fire - hold to shoot
+        if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
         {
             nextTimeToFire = Time.time + fireRate;
             Shoot();
         }
+
+        // fade muzzle light
+        if (muzzleLight != null && muzzleLight.intensity > 0)
+            muzzleLight.intensity = Mathf.Max(0, muzzleLight.intensity - Time.deltaTime * 20f);
     }
 
     void Shoot()
@@ -72,9 +92,13 @@ public class PlayerShooting : MonoBehaviour
 
         currentAmmo--;
 
-        // update ammo UI
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateAmmo(currentAmmo);
+
+        if (shootSound != null)
+            audioSource.PlayOneShot(shootSound, 0.4f);
+
+        SpawnMuzzleFlash();
 
         // raycast from center of screen
         Ray ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
@@ -82,16 +106,42 @@ public class PlayerShooting : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, range))
         {
-            // check if we hit a zombie
             Zombie zombie = hit.collider.GetComponent<Zombie>();
+            if (zombie == null)
+                zombie = hit.collider.GetComponentInParent<Zombie>();
+
             if (zombie != null)
             {
                 zombie.TakeDamage(damage);
+                SpawnImpact(bulletImpactFleshPrefab, hit.point, hit.normal);
+            }
+            else
+            {
+                SpawnImpact(bulletImpactConcretePrefab, hit.point, hit.normal);
             }
         }
+    }
 
-        // quick muzzle flash
-        StartCoroutine(MuzzleFlash());
+    void SpawnMuzzleFlash()
+    {
+        if (muzzleLight != null)
+            muzzleLight.intensity = 3f;
+
+        if (muzzleFlashPrefab != null)
+        {
+            GameObject fx = Instantiate(muzzleFlashPrefab, cam.transform);
+            fx.transform.localPosition = new Vector3(0.4f, -0.15f, 0.8f);
+            fx.transform.localRotation = Quaternion.identity;
+            Destroy(fx, 0.5f);
+        }
+    }
+
+    void SpawnImpact(GameObject prefab, Vector3 pos, Vector3 normal)
+    {
+        if (prefab == null) return;
+
+        GameObject fx = Instantiate(prefab, pos, Quaternion.LookRotation(normal));
+        Destroy(fx, 2f);
     }
 
     IEnumerator Reload()
@@ -101,7 +151,9 @@ public class PlayerShooting : MonoBehaviour
 
         isReloading = true;
 
-        // trigger reload animation
+        if (reloadSound != null)
+            audioSource.PlayOneShot(reloadSound, 0.24f);
+
         if (gunAnimator != null)
             gunAnimator.SetTrigger("Reload");
 
@@ -110,38 +162,11 @@ public class PlayerShooting : MonoBehaviour
         currentAmmo = magazineSize;
         isReloading = false;
 
-        // update ammo UI after reload finishes
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateAmmo(currentAmmo);
     }
 
-    IEnumerator MuzzleFlash()
-    {
-        // just a small light at the gun position for feedback
-        GameObject flash = new GameObject("Flash");
-        flash.transform.position = cam.transform.position + cam.transform.forward * 0.5f;
-
-        Light light = flash.AddComponent<Light>();
-        light.color = new Color(1f, 0.9f, 0.5f);
-        light.intensity = 5f;
-        light.range = 15f;
-
-        yield return new WaitForSeconds(0.12f);
-        Destroy(flash);
-    }
-
-    public int GetCurrentAmmo()
-    {
-        return currentAmmo;
-    }
-
-    public int GetMagazineSize()
-    {
-        return magazineSize;
-    }
-
-    public bool IsReloading()
-    {
-        return isReloading;
-    }
+    public int GetCurrentAmmo() { return currentAmmo; }
+    public int GetMagazineSize() { return magazineSize; }
+    public bool IsReloading() { return isReloading; }
 }

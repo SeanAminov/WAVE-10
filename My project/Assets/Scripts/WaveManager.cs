@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using System.Collections;
 
 public class WaveManager : MonoBehaviour
@@ -13,11 +14,13 @@ public class WaveManager : MonoBehaviour
     [SerializeField] float spawnRadius = 30f;
 
     [Header("Zombie Defaults")]
-    [SerializeField] float zombieSpeed = 3f;
+    [SerializeField] float baseZombieSpeed = 1.2f;
+    [SerializeField] float speedIncreasePerWave = 0.3f;
+    [SerializeField] float maxZombieSpeed = 4f;
     [SerializeField] int zombieHealth = 3;
 
     [Header("References")]
-    [SerializeField] GameObject zombiePrefab;
+    [SerializeField] GameObject[] zombiePrefabs;
 
     int currentWave = 0;
     int zombiesAlive = 0;
@@ -26,7 +29,12 @@ public class WaveManager : MonoBehaviour
 
     void Start()
     {
-        // small delay before wave 1 starts
+        if (zombiePrefabs == null || zombiePrefabs.Length == 0)
+        {
+            Debug.LogError("WaveManager: No zombie prefabs assigned!");
+            return;
+        }
+
         StartCoroutine(StartNextWave());
     }
 
@@ -39,7 +47,6 @@ public class WaveManager : MonoBehaviour
         zombiesToSpawn = zombieCount;
         zombiesAlive = 0;
 
-        // update wave UI
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateWave(currentWave);
 
@@ -59,7 +66,6 @@ public class WaveManager : MonoBehaviour
             zombiesToSpawn--;
             zombiesAlive++;
 
-            // random delay between spawns for variety
             float delay = spawnInterval + Random.Range(-0.5f, 0.5f);
             yield return new WaitForSeconds(Mathf.Max(delay, 0.3f));
         }
@@ -69,29 +75,50 @@ public class WaveManager : MonoBehaviour
 
     void SpawnZombie()
     {
-        if (zombiePrefab == null) return;
+        if (zombiePrefabs == null || zombiePrefabs.Length == 0) return;
 
-        // spawn at random point on edge of circle
-        float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-        Vector3 spawnPos = new Vector3(
-            Mathf.Cos(angle) * spawnRadius,
-            1f, // slight offset so they dont clip into ground
-            Mathf.Sin(angle) * spawnRadius
-        );
+        GameObject prefab = zombiePrefabs[Random.Range(0, zombiePrefabs.Length)];
+        if (prefab == null) return;
 
-        GameObject z = Instantiate(zombiePrefab, spawnPos, Quaternion.identity);
+        Vector3 spawnPos = GetSpawnPoint();
+
+        GameObject z = Instantiate(prefab, spawnPos, Quaternion.identity);
         Zombie zombie = z.GetComponent<Zombie>();
         if (zombie != null)
         {
-            zombie.SetStats(zombieHealth, zombieSpeed);
+            float waveSpeed = Mathf.Min(baseZombieSpeed + (currentWave - 1) * speedIncreasePerWave, maxZombieSpeed);
+            zombie.SetStats(zombieHealth, waveSpeed);
         }
+    }
+
+    Vector3 GetSpawnPoint()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            Vector3 candidate = new Vector3(
+                Mathf.Cos(angle) * spawnRadius,
+                1f,
+                Mathf.Sin(angle) * spawnRadius
+            );
+
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(candidate, out hit, 5f, NavMesh.AllAreas))
+                return hit.position;
+        }
+
+        // if no valid spot found, try center area
+        NavMeshHit centerHit;
+        if (NavMesh.SamplePosition(Vector3.zero, out centerHit, spawnRadius, NavMesh.AllAreas))
+            return centerHit.position;
+
+        return new Vector3(spawnRadius, 0f, 0f);
     }
 
     public void ZombieKilled()
     {
         zombiesAlive--;
 
-        // all zombies dead and done spawning = next wave
         if (zombiesAlive <= 0 && !isSpawning)
         {
             if (GameManager.Instance != null && !GameManager.Instance.isGameOver)
