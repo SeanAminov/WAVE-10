@@ -52,6 +52,10 @@ public class PlayerShooting : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null &&
+        (GameManager.Instance.isGameOver || GameManager.Instance.isPaused))
+            return;
+        
         if (GameManager.Instance != null && GameManager.Instance.isGameOver)
             return;
 

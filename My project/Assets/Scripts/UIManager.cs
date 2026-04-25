@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI killText;
     [SerializeField] TextMeshProUGUI ammoText;
     [SerializeField] GameObject gameOverPanel;
+    [SerializeField] GameObject pausePanel;
     [SerializeField] Image crosshair;
 
     [Header("Health Colors")]
@@ -28,6 +29,10 @@ public class UIManager : MonoBehaviour
         // make sure game over panel is hidden at start
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
+
+        // make sure pause panel is hidden at start
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
     }
 
     public void UpdateHealth(int currentHealth)
@@ -57,9 +62,30 @@ public class UIManager : MonoBehaviour
             ammoText.text = ammo.ToString();
     }
 
+    public void ShowPauseMenu()
+    {
+        if (pausePanel != null)
+            pausePanel.SetActive(true);
+
+        if (crosshair != null)
+            crosshair.enabled = false;
+    }
+
+    public void HidePauseMenu()
+    {
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
+        if (crosshair != null)
+            crosshair.enabled = true;
+    }
+
     public void ShowGameOver()
     {
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
+
+        if (crosshair != null)
+            crosshair.enabled = false;
     }
 }
