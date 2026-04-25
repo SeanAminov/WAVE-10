@@ -33,6 +33,17 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    public void Heal(int amount)
+    {
+        currentHealth += amount;
+
+        if (currentHealth > maxHealth)
+            currentHealth = maxHealth;
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateHealth(currentHealth);
+    }
+
     void Die()
     {
         currentHealth = 0;

@@ -27,6 +27,9 @@ public class PlayerShooting : MonoBehaviour
     [SerializeField] AudioSource audioSource;
     [SerializeField] Animator gunAnimator;
 
+    float damageMultiplier = 1f;
+    Coroutine damageBoostRoutine;
+
     float nextTimeToFire = 0f;
     int currentAmmo;
     bool isReloading = false;
@@ -89,6 +92,27 @@ public class PlayerShooting : MonoBehaviour
             muzzleLight.intensity = Mathf.Max(0, muzzleLight.intensity - Time.deltaTime * 20f);
     }
 
+    public void ApplyDamageBoost(float multiplier, float duration)
+    {
+        if (damageBoostRoutine != null)
+            StopCoroutine(damageBoostRoutine);
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowDamageBoostBar(duration);
+
+        damageBoostRoutine = StartCoroutine(DamageBoostRoutine(multiplier, duration));
+    }
+
+    IEnumerator DamageBoostRoutine(float multiplier, float duration)
+    {
+        damageMultiplier = multiplier;
+
+        yield return new WaitForSeconds(duration);
+
+        damageMultiplier = 1f;
+        damageBoostRoutine = null;
+    }
+
     void Shoot()
     {
         if (isReloading || currentAmmo <= 0)
@@ -116,7 +140,7 @@ public class PlayerShooting : MonoBehaviour
 
             if (zombie != null)
             {
-                zombie.TakeDamage(damage);
+                zombie.TakeDamage(Mathf.RoundToInt(damage * damageMultiplier));
                 SpawnImpact(bulletImpactFleshPrefab, hit.point, hit.normal);
             }
             else

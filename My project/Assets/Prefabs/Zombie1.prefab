@@ -125,6 +125,12 @@ MonoBehaviour:
   biteSound: {fileID: 8300000, guid: 29726c349dbf64b0aadfe8c9ec00d728, type: 3}
   agent: {fileID: 5854514113358725664}
   audioSource: {fileID: 7722891034567123456}
+  lootTable:
+  - prefab: {fileID: 125220, guid: b69b182e2808ee94d9e7cd648177cf6c, type: 3}
+    dropChance: 0.15
+  - prefab: {fileID: 189414, guid: b2cbd2ec06465274aa0aba46d00df4f7, type: 3}
+    dropChance: 0.05
+  dropHeight: 0.5
 --- !u!195 &5854514113358725664
 NavMeshAgent:
   m_ObjectHideFlags: 0
