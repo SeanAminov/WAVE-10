@@ -7,7 +7,7 @@ public class WaveManager : MonoBehaviour
     [Header("Wave Settings")]
     [SerializeField] int baseZombieCount = 5;
     [SerializeField] int zombiesPerWaveIncrease = 3;
-    [SerializeField] float timeBetweenWaves = 3f;
+    [SerializeField] int timeBetweenWaves = 10;
 
     [Header("Spawn Settings")]
     [SerializeField] float spawnInterval = 1.5f;
@@ -40,10 +40,24 @@ public class WaveManager : MonoBehaviour
 
     IEnumerator StartNextWave()
     {
-        yield return new WaitForSeconds(timeBetweenWaves);
+        int countdown = timeBetweenWaves;
+
+        while (countdown > 0)
+        {
+            if (UIManager.Instance != null)
+                UIManager.Instance.ShowWaveCountdown(countdown);
+
+            yield return new WaitForSeconds(1f);
+            countdown--;
+        }
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.HideWaveCountdown();
 
         currentWave++;
+
         int zombieCount = baseZombieCount + (currentWave - 1) * zombiesPerWaveIncrease;
+
         zombiesToSpawn = zombieCount;
         zombiesAlive = 0;
 

@@ -1826,6 +1826,19 @@ MonoBehaviour:
   attackRange: 1.5
   animator: {fileID: 0}
   deathDestroyDelay: 2
+  groanSounds: []
+  attackSounds: []
+  hurtSounds: []
+  deathSound: {fileID: 0}
+  biteSound: {fileID: 0}
+  agent: {fileID: 0}
+  audioSource: {fileID: 0}
+  lootTable:
+  - prefab: {fileID: 125220, guid: b69b182e2808ee94d9e7cd648177cf6c, type: 3}
+    dropChance: 1
+  - prefab: {fileID: 0}
+    dropChance: 0
+  dropHeight: 0.5
 --- !u!135 &5818015768898028514
 SphereCollider:
   m_ObjectHideFlags: 0

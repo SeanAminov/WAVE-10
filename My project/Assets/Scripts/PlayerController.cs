@@ -26,6 +26,10 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null &&
+            (GameManager.Instance.isPaused || GameManager.Instance.isGameOver))
+            return;
+
         HandleMouseLook();
         HandleMovement();
     }

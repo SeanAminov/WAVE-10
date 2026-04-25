@@ -2,6 +2,13 @@ using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
 
+[System.Serializable]
+public class LootDrop
+{
+    public GameObject prefab;
+    [Range(0f, 1f)] public float dropChance;
+}
+
 public class Zombie : MonoBehaviour
 {
     [Header("Stats")]
@@ -26,6 +33,10 @@ public class Zombie : MonoBehaviour
     [Header("References")]
     [SerializeField] NavMeshAgent agent;
     [SerializeField] AudioSource audioSource;
+
+    [Header("Loot Drops")]
+    [SerializeField] LootDrop[] lootTable;
+    [SerializeField] float dropHeight = 0.5f;
 
     int currentHealth;
     Transform player;
@@ -220,7 +231,27 @@ public class Zombie : MonoBehaviour
         if (GameManager.Instance != null)
             GameManager.Instance.AddKill();
 
+        TryDropLoot();
         StartCoroutine(DestroyAfterDeath());
+    }
+    
+    void TryDropLoot()
+    {
+        if (lootTable == null || lootTable.Length == 0)
+            return;
+
+        foreach (LootDrop drop in lootTable)
+        {
+            if (drop.prefab == null)
+                continue;
+
+            if (Random.value <= drop.dropChance)
+            {
+                Vector3 dropPos = transform.position + Vector3.up * dropHeight;
+                Instantiate(drop.prefab, dropPos, Quaternion.identity);
+                return; // only drop one item
+            }
+        }
     }
 
     IEnumerator DestroyAfterDeath()
