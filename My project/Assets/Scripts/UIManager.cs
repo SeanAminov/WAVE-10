@@ -15,6 +15,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] GameObject gameOverPanel;
     [SerializeField] GameObject pausePanel;
     [SerializeField] Image crosshair;
+    [SerializeField] TextMeshProUGUI waveCountdownText;
 
     [Header("Powerup UI")]
     [SerializeField] Image screenGlow;
@@ -55,6 +56,10 @@ public class UIManager : MonoBehaviour
             damageBoostBar.fillAmount = 0f;
             damageBoostBar.gameObject.SetActive(false);
         }
+
+        // make sure wave countdown is hidden at start
+        if (waveCountdownText != null)
+            waveCountdownText.gameObject.SetActive(false);
     }
 
     public void UpdateHealth(int currentHealth)
@@ -155,6 +160,21 @@ public class UIManager : MonoBehaviour
 
         damageBoostBar.fillAmount = 0f;
         damageBoostBar.gameObject.SetActive(false);
+    }
+
+    public void ShowWaveCountdown(int seconds)
+    {
+        if (waveCountdownText != null)
+        {
+            waveCountdownText.gameObject.SetActive(true);
+            waveCountdownText.text = "New Wave in " + seconds;
+        }
+    }
+
+    public void HideWaveCountdown()
+    {
+        if (waveCountdownText != null)
+            waveCountdownText.gameObject.SetActive(false);
     }
 
     public void ShowPauseMenu()
