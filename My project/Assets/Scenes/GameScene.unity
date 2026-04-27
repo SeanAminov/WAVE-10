@@ -8819,9 +8819,9 @@ MonoBehaviour:
   waveText: {fileID: 850419477}
   killText: {fileID: 919697957}
   ammoText: {fileID: 1519904216}
-  gameOverPanel: {fileID: 0}
-  winPanel: {fileID: 0}
-  pausePanel: {fileID: 0}
+  gameOverPanel: {fileID: 1873353868}
+  winPanel: {fileID: 671387025}
+  pausePanel: {fileID: 1351562965}
   crosshair: {fileID: 1804425405}
   waveCountdownText: {fileID: 1129578371}
   screenGlow: {fileID: 993481884}
