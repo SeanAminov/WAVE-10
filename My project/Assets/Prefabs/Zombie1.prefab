@@ -129,7 +129,9 @@ MonoBehaviour:
   - prefab: {fileID: 125220, guid: b69b182e2808ee94d9e7cd648177cf6c, type: 3}
     dropChance: 0.15
   - prefab: {fileID: 189414, guid: b2cbd2ec06465274aa0aba46d00df4f7, type: 3}
-    dropChance: 0.05
+    dropChance: 0.08
+  - prefab: {fileID: 189414, guid: e50a45e2cce946e993dcd1c38ec84df2, type: 3}
+    dropChance: 0.08
   dropHeight: 0.5
 --- !u!195 &5854514113358725664
 NavMeshAgent:

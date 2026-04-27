@@ -13,25 +13,17 @@ public class PowerUpVisual : MonoBehaviour
 
     void Start()
     {
-        // create a small point light if one was not assigned
-        if (glowLight == null)
+        if (glowLight != null)
         {
-            GameObject lightObj = new GameObject("PowerupGlow");
-            lightObj.transform.SetParent(transform);
-            lightObj.transform.localPosition = Vector3.zero;
-
-            glowLight = lightObj.AddComponent<Light>();
-            glowLight.type = LightType.Point;
+            glowLight.color = glowColor;
+            glowLight.intensity = glowIntensity;
+            glowLight.range = glowRange;
         }
-
-        glowLight.color = glowColor;
-        glowLight.intensity = glowIntensity;
-        glowLight.range = glowRange;
     }
 
     void Update()
     {
-        // rotate powerup so it is easier to notice
+        // spin slowly so the powerup catches the player's eye
         transform.Rotate(Vector3.up * rotateSpeed * Time.deltaTime, Space.World);
     }
 }

@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: -504807206178625783}
   - component: {fileID: 8518403214730443400}
   m_Layer: 0
-  m_Name: Damage
+  m_Name: Speed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -43,7 +43,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 189414}
-  m_Mesh: {fileID: 4300000, guid: f4e515fbc4481fc4287948d236caf448, type: 3}
+  m_Mesh: {fileID: 4300000, guid: 7ac2319ff4942e64d8b25c0a7b6295fb, type: 3}
 --- !u!23 &2389414
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -64,7 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e6605cb6a56d94345a6375bd6d8f52c0, type: 2}
+  - {fileID: 2100000, guid: 641865a4a7b0114499118421fb7942d6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -117,9 +117,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 114b1d78206aa624388c036f04fa3796, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  powerUpType: 1
+  m_Name:
+  m_EditorClassIdentifier:
+  powerUpType: 2
   healthAmount: 1
   damageMultiplier: 1.5
   speedMultiplier: 1.6
@@ -135,10 +135,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: baece67c29bc7bb4f8bba042f952eefd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   rotateSpeed: 90
   glowLight: {fileID: 0}
-  glowColor: {r: 1, g: 0.1, b: 0.1, a: 1}
+  glowColor: {r: 0.025817031, g: 0.97735846, b: 0.03061727, a: 1}
   glowIntensity: 1.5
   glowRange: 3

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// handles button clicks on the game over screen
+// hooks for the Restart and Menu buttons on the game-over panel
 public class HUDButtonHandler : MonoBehaviour
 {
     public void OnRestart()

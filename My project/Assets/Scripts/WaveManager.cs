@@ -8,24 +8,26 @@ public class WaveManager : MonoBehaviour
     [SerializeField] int baseZombieCount = 5;
     [SerializeField] int zombiesPerWaveIncrease = 3;
     [SerializeField] int timeBetweenWaves = 10;
+    [SerializeField] int maxWave = 10;
 
     [Header("Spawn Settings")]
     [SerializeField] float spawnInterval = 1.5f;
     [SerializeField] float spawnRadius = 30f;
 
-    [Header("Zombie Defaults")]
+    [Header("Zombie Difficulty")]
     [SerializeField] float baseZombieSpeed = 1.2f;
     [SerializeField] float speedIncreasePerWave = 0.3f;
     [SerializeField] float maxZombieSpeed = 4f;
     [SerializeField] int zombieHealth = 3;
 
     [Header("References")]
-    [SerializeField] GameObject[] zombiePrefabs;
+    [SerializeField] Zombie[] zombiePrefabs;
+    [SerializeField] Transform player;
 
-    int currentWave = 0;
-    int zombiesAlive = 0;
-    int zombiesToSpawn = 0;
-    bool isSpawning = false;
+    int currentWave;
+    int zombiesAlive;
+    int zombiesToSpawn;
+    bool isSpawning;
 
     void Start()
     {
@@ -40,25 +42,19 @@ public class WaveManager : MonoBehaviour
 
     IEnumerator StartNextWave()
     {
-        int countdown = timeBetweenWaves;
-
-        while (countdown > 0)
+        // countdown shown on the HUD before the wave starts
+        for (int i = timeBetweenWaves; i > 0; i--)
         {
             if (UIManager.Instance != null)
-                UIManager.Instance.ShowWaveCountdown(countdown);
-
+                UIManager.Instance.ShowWaveCountdown(i);
             yield return new WaitForSeconds(1f);
-            countdown--;
         }
 
         if (UIManager.Instance != null)
             UIManager.Instance.HideWaveCountdown();
 
         currentWave++;
-
-        int zombieCount = baseZombieCount + (currentWave - 1) * zombiesPerWaveIncrease;
-
-        zombiesToSpawn = zombieCount;
+        zombiesToSpawn = baseZombieCount + (currentWave - 1) * zombiesPerWaveIncrease;
         zombiesAlive = 0;
 
         if (UIManager.Instance != null)
@@ -89,22 +85,17 @@ public class WaveManager : MonoBehaviour
 
     void SpawnZombie()
     {
-        if (zombiePrefabs == null || zombiePrefabs.Length == 0) return;
-
-        GameObject prefab = zombiePrefabs[Random.Range(0, zombiePrefabs.Length)];
+        Zombie prefab = zombiePrefabs[Random.Range(0, zombiePrefabs.Length)];
         if (prefab == null) return;
 
-        Vector3 spawnPos = GetSpawnPoint();
+        Zombie zombie = Instantiate(prefab, GetSpawnPoint(), Quaternion.identity);
 
-        GameObject z = Instantiate(prefab, spawnPos, Quaternion.identity);
-        Zombie zombie = z.GetComponent<Zombie>();
-        if (zombie != null)
-        {
-            float waveSpeed = Mathf.Min(baseZombieSpeed + (currentWave - 1) * speedIncreasePerWave, maxZombieSpeed);
-            zombie.SetStats(zombieHealth, waveSpeed);
-        }
+        float waveSpeed = Mathf.Min(baseZombieSpeed + (currentWave - 1) * speedIncreasePerWave, maxZombieSpeed);
+        zombie.SetStats(zombieHealth, waveSpeed);
+        zombie.Init(player, this);
     }
 
+    // pick a random point on the spawn radius that lands on the NavMesh
     Vector3 GetSpawnPoint()
     {
         for (int i = 0; i < 10; i++)
@@ -116,14 +107,12 @@ public class WaveManager : MonoBehaviour
                 Mathf.Sin(angle) * spawnRadius
             );
 
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(candidate, out hit, 5f, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, 5f, NavMesh.AllAreas))
                 return hit.position;
         }
 
-        // if no valid spot found, try center area
-        NavMeshHit centerHit;
-        if (NavMesh.SamplePosition(Vector3.zero, out centerHit, spawnRadius, NavMesh.AllAreas))
+        // last-resort fallback if every random sample missed the NavMesh
+        if (NavMesh.SamplePosition(Vector3.zero, out NavMeshHit centerHit, spawnRadius, NavMesh.AllAreas))
             return centerHit.position;
 
         return new Vector3(spawnRadius, 0f, 0f);
@@ -133,10 +122,16 @@ public class WaveManager : MonoBehaviour
     {
         zombiesAlive--;
 
-        if (zombiesAlive <= 0 && !isSpawning)
+        if (zombiesAlive > 0 || isSpawning) return;
+        if (GameManager.Instance == null || GameManager.Instance.isGameOver) return;
+
+        // beating the final wave wins the game
+        if (currentWave >= maxWave)
         {
-            if (GameManager.Instance != null && !GameManager.Instance.isGameOver)
-                StartCoroutine(StartNextWave());
+            GameManager.Instance.WinGame();
+            return;
         }
+
+        StartCoroutine(StartNextWave());
     }
 }

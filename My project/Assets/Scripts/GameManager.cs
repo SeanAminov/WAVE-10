@@ -5,14 +5,13 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
-    [HideInInspector] public int currentWave = 0;
-    [HideInInspector] public int killCount = 0;
-    [HideInInspector] public bool isGameOver = false;
-    [HideInInspector] public bool isPaused = false;
+    [HideInInspector] public int currentWave;
+    [HideInInspector] public int killCount;
+    [HideInInspector] public bool isGameOver;
+    [HideInInspector] public bool isPaused;
 
     void Awake()
     {
-        // basic singleton
         if (Instance == null)
             Instance = this;
         else
@@ -21,16 +20,12 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (isGameOver)
-            return;
+        if (isGameOver) return;
 
-        // pause / resume with escape
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (isPaused)
-                ResumeGame();
-            else
-                PauseGame();
+            if (isPaused) ResumeGame();
+            else PauseGame();
         }
     }
 
@@ -45,10 +40,7 @@ public class GameManager : MonoBehaviour
     {
         isPaused = true;
         Time.timeScale = 0f;
-
-        // show cursor for pause menu
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        SetCursorVisible(true);
 
         if (UIManager.Instance != null)
             UIManager.Instance.ShowPauseMenu();
@@ -58,10 +50,7 @@ public class GameManager : MonoBehaviour
     {
         isPaused = false;
         Time.timeScale = 1f;
-
-        // lock cursor again for FPS
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        SetCursorVisible(false);
 
         if (UIManager.Instance != null)
             UIManager.Instance.HidePauseMenu();
@@ -71,13 +60,20 @@ public class GameManager : MonoBehaviour
     {
         isGameOver = true;
         Time.timeScale = 0f;
-
-        // show cursor again
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        SetCursorVisible(true);
 
         if (UIManager.Instance != null)
             UIManager.Instance.ShowGameOver();
+    }
+
+    public void WinGame()
+    {
+        isGameOver = true;
+        Time.timeScale = 0f;
+        SetCursorVisible(true);
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowWinScreen();
     }
 
     public void RestartGame()
@@ -94,5 +90,11 @@ public class GameManager : MonoBehaviour
         isPaused = false;
         isGameOver = false;
         SceneManager.LoadScene("MainMenu");
+    }
+
+    void SetCursorVisible(bool visible)
+    {
+        Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = visible;
     }
 }

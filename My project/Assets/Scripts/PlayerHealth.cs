@@ -16,29 +16,23 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        // check if we're still in iframes
+        // ignore hits during invincibility frames
         if (Time.time - lastHitTime < invincibilityTime)
             return;
 
         lastHitTime = Time.time;
         currentHealth -= amount;
 
-        // update the health UI
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateHealth(currentHealth);
 
         if (currentHealth <= 0)
-        {
             Die();
-        }
     }
 
     public void Heal(int amount)
     {
-        currentHealth += amount;
-
-        if (currentHealth > maxHealth)
-            currentHealth = maxHealth;
+        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
 
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateHealth(currentHealth);
@@ -52,13 +46,6 @@ public class PlayerHealth : MonoBehaviour
             GameManager.Instance.GameOver();
     }
 
-    public int GetHealth()
-    {
-        return currentHealth;
-    }
-
-    public int GetMaxHealth()
-    {
-        return maxHealth;
-    }
+    public int GetHealth() => currentHealth;
+    public int GetMaxHealth() => maxHealth;
 }

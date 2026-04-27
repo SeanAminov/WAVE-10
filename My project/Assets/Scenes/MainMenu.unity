@@ -917,6 +917,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a917cb20b9368644b95d3a1a4045bafd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  titleText: {fileID: 571149079}
   fadeDuration: 1.5
 --- !u!1 &621684759
 GameObject:
@@ -1143,6 +1144,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e5cb63c04d72024da4e20ba15272a12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buttonImage: {fileID: 0}
   normalColor: {r: 0.55, g: 0, b: 0, a: 1}
   hoverColor: {r: 1, g: 0.1, b: 0.1, a: 1}
 --- !u!114 &684345800
@@ -1157,6 +1159,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cf02dbcb47e6db43bac19bcca365d4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  button: {fileID: 0}
   audioSource: {fileID: 1730021365}
   clickSound: {fileID: 8300000, guid: f0b6bb9e8f738864a9a99bdd401bf1b4, type: 3}
 --- !u!1 &703099707
@@ -1451,6 +1454,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e5cb63c04d72024da4e20ba15272a12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buttonImage: {fileID: 705536650}
   normalColor: {r: 0.55, g: 0, b: 0, a: 1}
   hoverColor: {r: 1, g: 0.1, b: 0.1, a: 1}
 --- !u!114 &705536654
@@ -1465,6 +1469,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cf02dbcb47e6db43bac19bcca365d4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  button: {fileID: 705536649}
   audioSource: {fileID: 1730021365}
   clickSound: {fileID: 8300000, guid: f0b6bb9e8f738864a9a99bdd401bf1b4, type: 3}
 --- !u!1 &912136704
@@ -2274,6 +2279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e5cb63c04d72024da4e20ba15272a12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buttonImage: {fileID: 0}
   normalColor: {r: 0.55, g: 0, b: 0, a: 1}
   hoverColor: {r: 1, g: 0.1, b: 0.1, a: 1}
 --- !u!114 &1548596861
@@ -2288,6 +2294,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cf02dbcb47e6db43bac19bcca365d4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  button: {fileID: 0}
   audioSource: {fileID: 1730021365}
   clickSound: {fileID: 8300000, guid: f0b6bb9e8f738864a9a99bdd401bf1b4, type: 3}
 --- !u!1 &1730021364
@@ -2565,6 +2572,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e5cb63c04d72024da4e20ba15272a12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buttonImage: {fileID: 1743567219}
   normalColor: {r: 0.55, g: 0, b: 0, a: 1}
   hoverColor: {r: 1, g: 0.1, b: 0.1, a: 1}
 --- !u!114 &1743567223
@@ -2579,6 +2587,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cf02dbcb47e6db43bac19bcca365d4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  button: {fileID: 1743567218}
   audioSource: {fileID: 1730021365}
   clickSound: {fileID: 8300000, guid: f0b6bb9e8f738864a9a99bdd401bf1b4, type: 3}
 --- !u!1 &1804425404
@@ -2862,6 +2871,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e5cb63c04d72024da4e20ba15272a12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buttonImage: {fileID: 1873353871}
   normalColor: {r: 0.55, g: 0, b: 0, a: 1}
   hoverColor: {r: 1, g: 0.1, b: 0.1, a: 1}
 --- !u!114 &1873353874
@@ -2876,6 +2886,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cf02dbcb47e6db43bac19bcca365d4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  button: {fileID: 1873353870}
   audioSource: {fileID: 1730021365}
   clickSound: {fileID: 8300000, guid: f0b6bb9e8f738864a9a99bdd401bf1b4, type: 3}
 --- !u!1 &2052854208

@@ -10,16 +10,7 @@ public class MainMenu : MonoBehaviour
 
     void Start()
     {
-        // main menu buttons shown by default
-        if (mainButtonsPanel != null)
-            mainButtonsPanel.SetActive(true);
-
-        // sub panels hidden by default
-        if (controlsPanel != null)
-            controlsPanel.SetActive(false);
-
-        if (guidePanel != null)
-            guidePanel.SetActive(false);
+        ShowMainPanel();
     }
 
     public void StartGame()
@@ -29,43 +20,33 @@ public class MainMenu : MonoBehaviour
 
     public void ShowControls()
     {
-        if (mainButtonsPanel != null)
-            mainButtonsPanel.SetActive(false);
-
-        if (controlsPanel != null)
-            controlsPanel.SetActive(true);
-
-        if (guidePanel != null)
-            guidePanel.SetActive(false);
+        SetPanels(false, true, false);
     }
 
     public void ShowGuide()
     {
-        if (mainButtonsPanel != null)
-            mainButtonsPanel.SetActive(false);
-
-        if (guidePanel != null)
-            guidePanel.SetActive(true);
-
-        if (controlsPanel != null)
-            controlsPanel.SetActive(false);
+        SetPanels(false, false, true);
     }
 
     public void ClosePanels()
     {
-        // return to main menu buttons
-        if (mainButtonsPanel != null)
-            mainButtonsPanel.SetActive(true);
-
-        if (controlsPanel != null)
-            controlsPanel.SetActive(false);
-
-        if (guidePanel != null)
-            guidePanel.SetActive(false);
+        ShowMainPanel();
     }
 
     public void QuitGame()
     {
         Application.Quit();
+    }
+
+    void ShowMainPanel()
+    {
+        SetPanels(true, false, false);
+    }
+
+    void SetPanels(bool main, bool controls, bool guide)
+    {
+        if (mainButtonsPanel != null) mainButtonsPanel.SetActive(main);
+        if (controlsPanel != null) controlsPanel.SetActive(controls);
+        if (guidePanel != null) guidePanel.SetActive(guide);
     }
 }

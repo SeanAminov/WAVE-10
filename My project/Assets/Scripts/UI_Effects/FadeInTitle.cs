@@ -4,14 +4,13 @@ using System.Collections;
 
 public class FadeInTitle : MonoBehaviour
 {
+    [SerializeField] TextMeshProUGUI titleText;
     [SerializeField] float fadeDuration = 1.5f;
-
-    TextMeshProUGUI titleText;
 
     void Start()
     {
-        titleText = GetComponent<TextMeshProUGUI>();
-        StartCoroutine(FadeIn());
+        if (titleText != null)
+            StartCoroutine(FadeIn());
     }
 
     IEnumerator FadeIn()
@@ -21,7 +20,6 @@ public class FadeInTitle : MonoBehaviour
         titleText.color = c;
 
         float t = 0f;
-
         while (t < fadeDuration)
         {
             t += Time.deltaTime;

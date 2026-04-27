@@ -4,16 +4,11 @@ using UnityEngine.UI;
 public class ButtonClickSound : MonoBehaviour
 {
     [SerializeField] AudioClip clickSound;
-
-    Button button;
-    AudioSource audioSource;
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] Button button;
 
     void Awake()
     {
-        button = GetComponent<Button>();
-
-        audioSource = FindObjectOfType<AudioSource>();
-
         if (button != null)
             button.onClick.AddListener(PlayClickSound);
     }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -15,8 +16,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] CharacterController controller;
     [SerializeField] Camera cam;
 
-    float xRotation = 0f;
+    float xRotation;
     Vector3 velocity;
+
+    float speedMultiplier = 1f;
+    Coroutine speedBoostRoutine;
 
     void Start()
     {
@@ -39,28 +43,47 @@ public class PlayerController : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
+        // body turns left/right, camera tilts up/down
         transform.Rotate(Vector3.up * mouseX);
 
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
+        xRotation = Mathf.Clamp(xRotation - mouseY, -maxLookAngle, maxLookAngle);
         cam.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     void HandleMovement()
     {
+        // small downward push to stay grounded
         if (controller.isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        Vector3 input = transform.right * Input.GetAxis("Horizontal") +
+                        transform.forward * Input.GetAxis("Vertical");
 
-        Vector3 move = transform.right * x + transform.forward * z;
+        float baseSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed;
+        float speed = baseSpeed * speedMultiplier;
 
-        float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed;
-
-        controller.Move(move * speed * Time.deltaTime);
+        controller.Move(input * speed * Time.deltaTime);
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+    }
+
+    public void ApplySpeedBoost(float multiplier, float duration)
+    {
+        if (speedBoostRoutine != null)
+            StopCoroutine(speedBoostRoutine);
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowSpeedBoostBar(duration);
+
+        speedBoostRoutine = StartCoroutine(SpeedBoostRoutine(multiplier, duration));
+    }
+
+    IEnumerator SpeedBoostRoutine(float multiplier, float duration)
+    {
+        speedMultiplier = multiplier;
+        yield return new WaitForSeconds(duration);
+        speedMultiplier = 1f;
+        speedBoostRoutine = null;
     }
 }

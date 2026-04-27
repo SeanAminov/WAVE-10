@@ -30,21 +30,22 @@ public class Zombie : MonoBehaviour
     [SerializeField] AudioClip deathSound;
     [SerializeField] AudioClip biteSound;
 
-    [Header("References")]
-    [SerializeField] NavMeshAgent agent;
-    [SerializeField] AudioSource audioSource;
-
     [Header("Loot Drops")]
     [SerializeField] LootDrop[] lootTable;
     [SerializeField] float dropHeight = 0.5f;
 
-    int currentHealth;
-    Transform player;
-    float lastAttackTime = -10f;
+    [Header("References")]
+    [SerializeField] NavMeshAgent agent;
+    [SerializeField] AudioSource audioSource;
 
-    bool isDead = false;
-    bool isAttacking = false;
+    Transform player;
+    WaveManager waveManager;
+
+    int currentHealth;
+    float lastAttackTime = -10f;
     float nextGroanTime;
+    bool isDead;
+    bool isAttacking;
 
     void Start()
     {
@@ -58,10 +59,6 @@ public class Zombie : MonoBehaviour
             agent.acceleration = 8f;
         }
 
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-            player = playerObj.transform;
-
         audioSource.playOnAwake = false;
         audioSource.spatialBlend = 1f;
         audioSource.minDistance = 2f;
@@ -71,11 +68,28 @@ public class Zombie : MonoBehaviour
         nextGroanTime = Time.time + Random.Range(2f, 8f);
     }
 
+    // called by WaveManager right after spawning
+    public void Init(Transform playerRef, WaveManager wm)
+    {
+        player = playerRef;
+        waveManager = wm;
+    }
+
+    // called by WaveManager to apply per-wave difficulty
+    public void SetStats(int health, float speed)
+    {
+        maxHealth = health;
+        currentHealth = health;
+        moveSpeed = speed;
+
+        if (agent != null && agent.isOnNavMesh)
+            agent.speed = speed;
+    }
+
     void Update()
     {
         if (isDead || player == null) return;
 
-        // random groaning
         if (groanSounds != null && groanSounds.Length > 0 && Time.time >= nextGroanTime)
         {
             PlayRandomClip(groanSounds, 0.2f);
@@ -87,15 +101,9 @@ public class Zombie : MonoBehaviour
         if (dist <= attackRange)
         {
             StopMoving();
+            if (animator != null) animator.SetFloat("speedf", 0f);
 
-            if (animator != null)
-                animator.SetFloat("speedf", 0f);
-
-            // face the player
-            Vector3 lookDir = (player.position - transform.position);
-            lookDir.y = 0;
-            if (lookDir.sqrMagnitude > 0.001f)
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), Time.deltaTime * 10f);
+            FacePlayer();
 
             if (!isAttacking && Time.time - lastAttackTime >= attackCooldown)
                 Attack();
@@ -105,9 +113,16 @@ public class Zombie : MonoBehaviour
             ChasePlayer();
 
             float currentSpeed = agent != null ? agent.velocity.magnitude : 0f;
-            if (animator != null)
-                animator.SetFloat("speedf", currentSpeed);
+            if (animator != null) animator.SetFloat("speedf", currentSpeed);
         }
+    }
+
+    void FacePlayer()
+    {
+        Vector3 lookDir = player.position - transform.position;
+        lookDir.y = 0;
+        if (lookDir.sqrMagnitude > 0.001f)
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), Time.deltaTime * 10f);
     }
 
     void ChasePlayer()
@@ -127,27 +142,20 @@ public class Zombie : MonoBehaviour
 
     void Attack()
     {
-        if (isDead || isAttacking || player == null)
-            return;
+        if (isDead || isAttacking || player == null) return;
 
-        float dist = Vector3.Distance(transform.position, player.position);
-        if (dist > attackRange)
+        if (Vector3.Distance(transform.position, player.position) > attackRange)
             return;
 
         isAttacking = true;
         lastAttackTime = Time.time;
 
-        if (animator != null)
-            animator.SetTrigger("attackTrigger");
-
-        if (attackSounds != null && attackSounds.Length > 0)
-            PlayRandomClip(attackSounds, 0.35f);
-        if (biteSound != null)
-            audioSource.PlayOneShot(biteSound, 0.28f);
+        if (animator != null) animator.SetTrigger("attackTrigger");
+        if (attackSounds != null && attackSounds.Length > 0) PlayRandomClip(attackSounds, 0.35f);
+        if (biteSound != null) audioSource.PlayOneShot(biteSound, 0.28f);
 
         PlayerHealth hp = player.GetComponent<PlayerHealth>();
-        if (hp != null)
-            hp.TakeDamage(attackDamage);
+        if (hp != null) hp.TakeDamage(attackDamage);
 
         StartCoroutine(EndAttackLock());
     }
@@ -173,26 +181,24 @@ public class Zombie : MonoBehaviour
             Die();
     }
 
+    // brief red tint on the model when shot
     IEnumerator HitFlash()
     {
         var renderers = GetComponentsInChildren<Renderer>();
-        foreach (var r in renderers)
-        {
-            foreach (var mat in r.materials)
-            {
-                if (mat.HasProperty("_Color"))
-                    mat.color = Color.red;
-            }
-        }
 
+        SetRendererColor(renderers, Color.red);
         yield return new WaitForSeconds(0.1f);
+        SetRendererColor(renderers, Color.white);
+    }
 
+    void SetRendererColor(Renderer[] renderers, Color color)
+    {
         foreach (var r in renderers)
         {
             foreach (var mat in r.materials)
             {
                 if (mat.HasProperty("_Color"))
-                    mat.color = Color.white;
+                    mat.color = color;
             }
         }
     }
@@ -210,8 +216,7 @@ public class Zombie : MonoBehaviour
             agent.enabled = false;
         }
 
-        if (deathSound != null)
-            audioSource.PlayOneShot(deathSound, 0.4f);
+        if (deathSound != null) audioSource.PlayOneShot(deathSound, 0.4f);
 
         if (animator != null)
         {
@@ -220,36 +225,30 @@ public class Zombie : MonoBehaviour
             animator.SetInteger("deathType", Random.Range(0, 2));
         }
 
-        Collider[] colliders = GetComponentsInChildren<Collider>();
-        foreach (Collider col in colliders)
+        // disable colliders so the body doesn't block bullets or get hit again
+        foreach (Collider col in GetComponentsInChildren<Collider>())
             col.enabled = false;
 
-        WaveManager wm = FindObjectOfType<WaveManager>();
-        if (wm != null)
-            wm.ZombieKilled();
-
-        if (GameManager.Instance != null)
-            GameManager.Instance.AddKill();
+        if (waveManager != null) waveManager.ZombieKilled();
+        if (GameManager.Instance != null) GameManager.Instance.AddKill();
 
         TryDropLoot();
         StartCoroutine(DestroyAfterDeath());
     }
-    
+
     void TryDropLoot()
     {
-        if (lootTable == null || lootTable.Length == 0)
-            return;
+        if (lootTable == null || lootTable.Length == 0) return;
 
         foreach (LootDrop drop in lootTable)
         {
-            if (drop.prefab == null)
-                continue;
+            if (drop.prefab == null) continue;
 
             if (Random.value <= drop.dropChance)
             {
                 Vector3 dropPos = transform.position + Vector3.up * dropHeight;
                 Instantiate(drop.prefab, dropPos, Quaternion.identity);
-                return; // only drop one item
+                return; // only one drop per zombie
             }
         }
     }
@@ -258,16 +257,6 @@ public class Zombie : MonoBehaviour
     {
         yield return new WaitForSeconds(deathDestroyDelay);
         Destroy(gameObject);
-    }
-
-    public void SetStats(int health, float speed)
-    {
-        maxHealth = health;
-        currentHealth = health;
-        moveSpeed = speed;
-
-        if (agent != null && agent.isOnNavMesh)
-            agent.speed = speed;
     }
 
     void PlayRandomClip(AudioClip[] clips, float volume)
