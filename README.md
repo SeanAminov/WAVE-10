@@ -47,7 +47,7 @@ Survive ten waves of zombies in a dark arena. Each wave gets harder with more zo
 ## Team
 
 - Sean Aminov: programming, AI, VFX, audio, UI, lighting, powerup system
-- Minh Tran: animations, asset selection, environment layout, testing
+- Minh Tran: programming, animations, asset selection, environment layout, testing
 
 ## How to Run
 
